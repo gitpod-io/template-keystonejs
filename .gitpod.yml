@@ -1,0 +1,29 @@
+## We're using the `workspace-full-vnc` image so that we have a vnc server+client
+## as well as google-chrome. This will allow us to access keystone-app via `http://localhost` for the web version of Gitpod.
+## However, this is not necessary if you can open your workspace locally on Desktop VSCODE.
+
+## This template will setup a new keystone-app project for the first time you open a workspace
+## after doing that, it will strip out the #BOOTSTRAP code as it becomes redundant.
+
+image: gitpod/workspace-full-vnc:2022-06-09-18-13-52
+
+# List the start up tasks. Learn more https://www.gitpod.io/docs/config-start-tasks/
+tasks:
+  - name: Run project
+    command: |
+      #BOOTSTRAP
+      TMP_DIR="/tmp/.keystone";
+      yarn create keystone-app "$TMP_DIR";
+      (shopt -s dotglob && mv "$TMP_DIR/"* .);
+      sed -i '/#BOOTSTRAP$/,/#BOOTSTRAP$/d' .gitpod.yml;
+      #BOOTSTRAP
+      (gp await-port 3000 && chromium --start-fullscreen "http://localhost:3000" 2>/dev/null) & yarn dev
+
+# List the ports to expose. Learn more https://www.gitpod.io/docs/config-ports/
+ports:
+  - port: 3000 # expressJs server
+    onOpen: ignore
+  - port: 5900 # vncserver
+    onOpen: ignore
+  - port: 6080 # noVNC client
+    onOpen: open-preview
